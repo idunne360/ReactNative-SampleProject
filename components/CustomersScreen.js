@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,21 +6,21 @@ import {
   TextInput,
   Text,
   TouchableOpacity,
-} from 'react-native';
-import * as SQLite from 'expo-sqlite/legacy';
+} from "react-native";
+import * as SQLite from "expo-sqlite/legacy";
 import {
   IconButton,
   Provider,
   Portal,
   Dialog,
   Button,
-} from 'react-native-paper';
-import asyncAlert from './asyncAlert';
+} from "react-native-paper";
+import asyncAlert from "./asyncAlert";
 
-const db = SQLite.openDatabase('little_lemon');
+const db = SQLite.openDatabase("little_lemon");
 
 export default function CustomersScreen() {
-  const [textInputValue, setTextInputValue] = useState('');
+  const [textInputValue, setTextInputValue] = useState("");
   const [dialog, setDialog] = useState({
     customer: {},
     isVisible: false,
@@ -30,9 +30,9 @@ export default function CustomersScreen() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists customers (id integer primary key not null, uid text, name text);'
+        "create table if not exists customers (id integer primary key not null, uid text, name text);"
       );
-      tx.executeSql('select * from customers', [], (_, { rows }) => {
+      tx.executeSql("select * from customers", [], (_, { rows }) => {
         const customers = rows._array.map((item) => ({
           uid: item.uid,
           name: item.name,
@@ -73,7 +73,7 @@ export default function CustomersScreen() {
 
   const deleteCustomer = async (customer) => {
     const shouldDelete = await asyncAlert({
-      title: 'Delete customer',
+      title: "Delete customer",
       message: `Are you sure you want to delete the customer named "${customer.name}"?`,
     });
     if (!shouldDelete) {
@@ -83,7 +83,7 @@ export default function CustomersScreen() {
     setCustomers(newCustomers);
     // SQL transaction to delete item based on uid
     db.transaction((tx) => {
-      tx.executeSql('delete from customers where uid = ?', [customer.uid]);
+      tx.executeSql("delete from customers where uid = ?", [customer.uid]);
     });
   };
 
@@ -109,13 +109,14 @@ export default function CustomersScreen() {
               setCustomers([...customers, newValue]);
               db.transaction((tx) => {
                 tx.executeSql(
-                  'insert into customers (uid, name) values(?, ?)',
+                  "insert into customers (uid, name) values(?, ?)",
                   [newValue.uid, newValue.name]
                 );
               });
-              setTextInputValue('');
+              setTextInputValue("");
             }}
-            style={styles.buttonStyle}>
+            style={styles.buttonStyle}
+          >
             <Text style={styles.buttonTextStyle}> Save Customer </Text>
           </TouchableOpacity>
           <View>
@@ -171,62 +172,62 @@ export default function CustomersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#495E57',
+    backgroundColor: "#495E57",
     padding: 16,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 16,
   },
   header: {
     margin: 24,
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   switch: {
-    color: '#EDEFEE',
+    color: "#EDEFEE",
   },
   titleText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#EDEFEE',
+    fontWeight: "bold",
+    color: "#EDEFEE",
     marginBottom: 20,
   },
   textInputStyle: {
     height: 40,
-    borderColor: '#EDEFEE',
+    borderColor: "#EDEFEE",
     borderWidth: 1,
     paddingHorizontal: 10,
     marginBottom: 20,
-    color: '#EDEFEE',
+    color: "#EDEFEE",
   },
   buttonStyle: {
-    backgroundColor: '#F4CE14',
+    backgroundColor: "#F4CE14",
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 5,
   },
   buttonTextStyle: {
-    color: '#333333',
+    color: "#333333",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   customer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFF",
     padding: 10,
     marginVertical: 5,
     borderRadius: 5,
   },
   customerName: {
     fontSize: 18,
-    color: '#333333',
+    color: "#333333",
   },
   icons: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
 });
