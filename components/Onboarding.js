@@ -1,23 +1,22 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Image,
   StyleSheet,
   Text,
   KeyboardAvoidingView,
-  Platform,
   TextInput,
   Pressable,
 } from "react-native";
-import PagerView from "react-native-pager-view";
 import { AuthContext } from "../AuthContext";
 
-const Onboarding = () => {
+const Onboarding = (navigation) => {
   const [firstName, onChangeFirstName] = useState("");
   const [lastName, onChangeLastName] = useState("");
   const [email, onChangeEmail] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
 
-  const viewPagerRef = useRef(PagerView);
+  const { onboard } = useContext(AuthContext);
 
   const validateName = (name) => {
     if (name.length > 0) {
@@ -32,9 +31,16 @@ const Onboarding = () => {
       /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
   };
+
   const isEmailValid = validateEmail(email);
 
-  const { onboard } = useContext(AuthContext);
+  const goToNextPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(currentPage - 1);
+  };
 
   return (
     <KeyboardAvoidingView style={styles.container}>
@@ -46,13 +52,8 @@ const Onboarding = () => {
           accessibilityLabel={"Little Lemon Logo"}
         />
       </View>
-      <PagerView
-        style={styles.viewPager}
-        scrollEnabled={false}
-        initialPage={0}
-        ref={viewPagerRef}
-      >
-        <View style={styles.page} key="1">
+      {currentPage === 0 && (
+        <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>First Name</Text>
             <TextInput
@@ -72,13 +73,15 @@ const Onboarding = () => {
               styles.btn,
               validateName(firstName) ? styles.btnDisabled : "",
             ]}
-            onPress={() => viewPagerRef.current.setPage(1)}
+            onPress={goToNextPage}
             disabled={validateName(firstName)}
           >
             <Text style={styles.btntext}>Next</Text>
           </Pressable>
         </View>
-        <View style={styles.page} key="2">
+      )}
+      {currentPage === 1 && (
+        <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>Last Name</Text>
             <TextInput
@@ -94,10 +97,7 @@ const Onboarding = () => {
             <View style={styles.pageDot}></View>
           </View>
           <View style={styles.buttons}>
-            <Pressable
-              style={styles.halfBtn}
-              onPress={() => viewPagerRef.current.setPage(0)}
-            >
+            <Pressable style={styles.halfBtn} onPress={goToPreviousPage}>
               <Text style={styles.btntext}>Back</Text>
             </Pressable>
             <Pressable
@@ -105,14 +105,16 @@ const Onboarding = () => {
                 styles.halfBtn,
                 validateName(lastName) ? styles.btnDisabled : "",
               ]}
-              onPress={() => viewPagerRef.current.setPage(2)}
+              onPress={goToNextPage}
               disabled={validateName(lastName)}
             >
               <Text style={styles.btntext}>Next</Text>
             </Pressable>
           </View>
         </View>
-        <View style={styles.page} key="3">
+      )}
+      {currentPage === 2 && (
+        <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>Email</Text>
             <TextInput
@@ -129,10 +131,7 @@ const Onboarding = () => {
             <View style={[styles.pageDot, styles.pageDotActive]}></View>
           </View>
           <View style={styles.buttons}>
-            <Pressable
-              style={styles.halfBtn}
-              onPress={() => viewPagerRef.current.setPage(1)}
-            >
+            <Pressable style={styles.halfBtn} onPress={goToPreviousPage}>
               <Text style={styles.btntext}>Back</Text>
             </Pressable>
             <Pressable
@@ -144,7 +143,7 @@ const Onboarding = () => {
             </Pressable>
           </View>
         </View>
-      </PagerView>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -164,9 +163,6 @@ const styles = StyleSheet.create({
     height: 50,
     width: 150,
     resizeMode: "contain",
-  },
-  viewPager: {
-    flex: 1,
   },
   page: {
     justifyContent: "center",
