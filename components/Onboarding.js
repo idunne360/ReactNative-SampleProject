@@ -14,7 +14,7 @@ const Onboarding = (navigation) => {
   const [firstName, onChangeFirstName] = useState("");
   const [lastName, onChangeLastName] = useState("");
   const [email, onChangeEmail] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const { onboard } = useContext(AuthContext);
 
@@ -34,12 +34,12 @@ const Onboarding = (navigation) => {
 
   const isEmailValid = validateEmail(email);
 
-  const goToNextPage = () => {
-    setCurrentPage(currentPage + 1);
+  const goToNextStep = () => {
+    setCurrentStep(currentStep + 1);
   };
 
-  const goToPreviousPage = () => {
-    setCurrentPage(currentPage - 1);
+  const goToPreviousStep = () => {
+    setCurrentStep(currentStep - 1);
   };
 
   return (
@@ -52,7 +52,7 @@ const Onboarding = (navigation) => {
           accessibilityLabel={"Little Lemon Logo"}
         />
       </View>
-      {currentPage === 0 && (
+      {currentStep === 0 && (
         <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>First Name</Text>
@@ -63,24 +63,24 @@ const Onboarding = (navigation) => {
               placeholder={"First Name"}
             />
           </View>
-          <View style={styles.pageIndicator}>
-            <View style={[styles.pageDot, styles.pageDotActive]}></View>
-            <View style={styles.pageDot}></View>
-            <View style={styles.pageDot}></View>
+          <View style={styles.StepIndicator}>
+            <View style={[styles.StepDot, styles.StepDotActive]}></View>
+            <View style={styles.StepDot}></View>
+            <View style={styles.StepDot}></View>
           </View>
           <Pressable
             style={[
               styles.btn,
               validateName(firstName) ? styles.btnDisabled : "",
             ]}
-            onPress={goToNextPage}
+            onPress={goToNextStep}
             disabled={validateName(firstName)}
           >
             <Text style={styles.btntext}>Next</Text>
           </Pressable>
         </View>
       )}
-      {currentPage === 1 && (
+      {currentStep === 1 && (
         <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>Last Name</Text>
@@ -91,13 +91,13 @@ const Onboarding = (navigation) => {
               placeholder={"Last Name"}
             />
           </View>
-          <View style={styles.pageIndicator}>
-            <View style={styles.pageDot}></View>
-            <View style={[styles.pageDot, styles.pageDotActive]}></View>
-            <View style={styles.pageDot}></View>
+          <View style={styles.StepIndicator}>
+            <View style={styles.StepDot}></View>
+            <View style={[styles.StepDot, styles.StepDotActive]}></View>
+            <View style={styles.StepDot}></View>
           </View>
           <View style={styles.buttons}>
-            <Pressable style={styles.halfBtn} onPress={goToPreviousPage}>
+            <Pressable style={styles.halfBtn} onPress={goToPreviousStep}>
               <Text style={styles.btntext}>Back</Text>
             </Pressable>
             <Pressable
@@ -105,7 +105,7 @@ const Onboarding = (navigation) => {
                 styles.halfBtn,
                 validateName(lastName) ? styles.btnDisabled : "",
               ]}
-              onPress={goToNextPage}
+              onPress={goToNextStep}
               disabled={validateName(lastName)}
             >
               <Text style={styles.btntext}>Next</Text>
@@ -113,7 +113,7 @@ const Onboarding = (navigation) => {
           </View>
         </View>
       )}
-      {currentPage === 2 && (
+      {currentStep === 2 && (
         <View style={styles.page}>
           <View style={styles.pageContainer}>
             <Text style={styles.text}>Email</Text>
@@ -125,13 +125,13 @@ const Onboarding = (navigation) => {
               keyboardType="email-address"
             />
           </View>
-          <View style={styles.pageIndicator}>
-            <View style={styles.pageDot}></View>
-            <View style={styles.pageDot}></View>
-            <View style={[styles.pageDot, styles.pageDotActive]}></View>
+          <View style={styles.StepIndicator}>
+            <View style={styles.StepDot}></View>
+            <View style={styles.StepDot}></View>
+            <View style={[styles.StepDot, styles.StepDotActive]}></View>
           </View>
           <View style={styles.buttons}>
-            <Pressable style={styles.halfBtn} onPress={goToPreviousPage}>
+            <Pressable style={styles.halfBtn} onPress={goToPreviousStep}>
               <Text style={styles.btntext}>Back</Text>
             </Pressable>
             <Pressable
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     alignSelf: "center",
   },
-  pageIndicator: {
+  StepIndicator: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -231,14 +231,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  pageDot: {
+  StepDot: {
     backgroundColor: "#67788a",
     width: 22,
     height: 22,
     marginHorizontal: 10,
     borderRadius: 11,
   },
-  pageDotActive: {
+  StepDotActive: {
     backgroundColor: "#f4ce14",
     width: 22,
     height: 22,
