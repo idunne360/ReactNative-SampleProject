@@ -1,74 +1,112 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, useColorScheme, AppRegistry } from 'react-native';
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { registerRootComponent } from 'expo';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useEffect, useMemo, useReducer } from "react";
+import { Alert } from "react-native";
+import Onboarding from "./components/Onboarding";
+import Profile from "./components/Profile";
+import SplashScreen from "./components/SplashScreen";
+import Home from "./components/Home";
 
-registerRootComponent( App );
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import LittleLemonHeader from './components/LittleLemonHeader';
-import LittleLemonFooter from './components/LittleLemonFooter';
+import { AuthContext } from "./AuthContext";
+import { registerRootComponent } from "expo";
 
-import WelcomeScreen from './components/WelcomeScreen';
-import MenuItems from './components/MenuItems';
-import FeedbackForm from './components/FeedbackForm';
-import LoginScreen from './components/LoginScreen';
-import Preferences from './components/Preferences';
-import Customers from './components/CustomersScreen';
+const Stack = createNativeStackNavigator();
 
-const Tab = createBottomTabNavigator();
+registerRootComponent(App);
 
-export default function App() {
-  const colorScheme = 'dark';
+export default function App({ navigation }) {
+  const [state, dispatch] = useReducer(
+    (prevState, action) => {
+      switch (action.type) {
+        case "onboard":
+          return {
+            ...prevState,
+            isLoading: false,
+            isOnboardingCompleted: action.isOnboardingCompleted,
+          };
+      }
+    },
+    {
+      isLoading: true,
+      isOnboardingCompleted: false,
+    }
+  );
+
+  useEffect(() => {
+    (async () => {
+      let profileData = [];
+      try {
+        const getProfile = await AsyncStorage.getItem("profile");
+        if (getProfile !== null) {
+          profileData = getProfile;
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (Object.keys(profileData).length != 0) {
+          dispatch({ type: "onboard", isOnboardingCompleted: true });
+        } else {
+          dispatch({ type: "onboard", isOnboardingCompleted: false });
+        }
+      }
+    })();
+  }, []);
+
+  const authContext = useMemo(
+    () => ({
+      onboard: async (data) => {
+        try {
+          const jsonValue = JSON.stringify(data);
+          await AsyncStorage.setItem("profile", jsonValue);
+        } catch (e) {
+          console.error(e);
+        }
+
+        dispatch({ type: "onboard", isOnboardingCompleted: true });
+      },
+      update: async (data) => {
+        try {
+          const jsonValue = JSON.stringify(data);
+          await AsyncStorage.setItem("profile", jsonValue);
+        } catch (e) {
+          console.error(e);
+        }
+
+        Alert.alert("Success", "Successfully saved changes!");
+      },
+      logout: async () => {
+        try {
+          await AsyncStorage.clear();
+        } catch (e) {
+          console.error(e);
+        }
+
+        dispatch({ type: "onboard", isOnboardingCompleted: false });
+      },
+    }),
+    []
+  );
+
+  if (state.isLoading) {
+    return <SplashScreen />;
+  }
 
   return (
-    <NavigationContainer>
-      <View style={styles.container}>
-          <LittleLemonHeader />
-          <Tab.Navigator 
-            screenOptions={({ route }) => ({
-              tabBarIcon: ({size}) => {
-                let iconName;
-                if (route.name === 'Welcome') {
-                  iconName = 'home-outline';
-                } else if (route.name === 'Login') {
-                  iconName = 'person-outline';
-                } else if (route.name === 'Menu') {
-                  iconName = 'restaurant-outline'
-                } else if (route.name === 'Feedback') {
-                  iconName = 'help-circle-outline'
-                } else if (route.name === 'Preferences') {
-                  iconName = 'settings-outline'
-                } else if (route.name === 'Customers') {
-                  iconName = 'people-outline'
-                }
-                return <Ionicons name={iconName} size={size} />;
-              },
-            })}
-            initialRouteName="Welcome">
-            <Tab.Screen name="Welcome" options={{headerShown: false}} component={WelcomeScreen} />
-            <Tab.Screen name="Login" options={{headerShown: false}} component={LoginScreen} />
-            <Tab.Screen name="Menu" options={{headerShown: false}} component={MenuItems} />
-            <Tab.Screen name="Feedback" options={{headerShown: false}} component={FeedbackForm} />
-            <Tab.Screen name="Preferences" options={{headerShown: false}} component={Preferences} />
-            <Tab.Screen name="Customers" options={{headerShown: false}} component={Customers} />
-          </Tab.Navigator>
-        </View>
-        <View style={styles.footerContainer}>
-          <LittleLemonFooter />
-        </View>
-      
-    </NavigationContainer>
+    <AuthContext.Provider value={authContext}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          {state.isOnboardingCompleted ? (
+            <>
+              <Stack.Screen name="Home" component={Home} />
+              <Stack.Screen name="Profile" component={Profile} />
+            </>
+          ) : (
+            <Stack.Screen name="Onboarding" component={Onboarding} />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#495E57',
-  },
-  footerContainer: { backgroundColor: '#495E57' }
-});
