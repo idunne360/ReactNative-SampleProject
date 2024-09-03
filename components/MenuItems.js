@@ -1,84 +1,89 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
+  Text,
   View,
   StyleSheet,
-  Text,
   SectionList,
-  Pressable,
-  FlatList,
   SafeAreaView,
   ActivityIndicator,
+  StatusBar,
+  Alert,
+  Image,
+  Pressable,
 } from "react-native";
+import { Searchbar } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const menuItemsToDisplay = [
-  {
-    title: "Appetizers",
-    data: [
-      { name: "Hummus", price: "$5.00" },
-      { name: "Moutabal", price: "$5.00" },
-      { name: "Falafel", price: "$7.50" },
-      { name: "Marinated Olives", price: "$5.00" },
-      { name: "Kofta", price: "$5.00" },
-      { name: "Eggplant Salad", price: "$8.50" },
-    ],
-  },
-  {
-    title: "Main Dishes",
-    data: [
-      { name: "Lentil Burger", price: "$10.00" },
-      { name: "Smoked Salmon", price: "$14.00" },
-      { name: "Kofta Burger", price: "$11.00" },
-      { name: "Turkish Kebab", price: "$15.50" },
-    ],
-  },
-  {
-    title: "Sides",
-    data: [
-      { name: "Fries", price: "$3.00", id: "11K" },
-      { name: "Buttered Rice", price: "$3.00" },
-      { name: "Bread Sticks", price: "$3.00" },
-      { name: "Pita Pocket", price: "$3.00" },
-      { name: "Lentil Soup", price: "$3.75" },
-      { name: "Greek Salad", price: "$6.00" },
-      { name: "Rice Pilaf", price: "$4.00" },
-    ],
-  },
-  {
-    title: "Desserts",
-    data: [
-      { name: "Baklava", price: "$3.00" },
-      { name: "Tartufo", price: "$3.00" },
-      { name: "Tiramisu", price: "$5.00" },
-      { name: "Panna Cotta", price: "$5.00" },
-    ],
-  },
-];
+import * as SQLite from "expo-sqlite/legacy";
+const db = SQLite.openDatabase("little_lemon");
 
-const Item = ({ name, price }) => (
-  <View style={menuStyles.innerContainer}>
-    <Text style={menuStyles.item}>{name}</Text>
-    <Text style={menuStyles.item}>{price}</Text>
+const API_URL =
+  "https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json";
+
+const sections = ["Starters", "Mains", "Desserts"];
+
+const images = {
+  "bruschetta.jpg": require("../img/bruschetta.jpg"),
+  "greekSalad.jpg": require("../img/greekSalad.jpg"),
+  "grilledFish.jpg": require("../img/grilledFish.jpg"),
+  "pasta.jpg": require("../img/pasta.jpg"),
+  "lemonDessert.jpg": require("../img/lemonDessert.jpg"),
+};
+
+const Item = ({ name, price, description, image }) => (
+  <View style={styles.item}>
+    <View style={styles.itemBody}>
+      <Text style={styles.name}>{name}</Text>
+      <Text style={styles.description}>{description}</Text>
+      <Text style={styles.price}>${price}</Text>
+    </View>
+    <Image style={styles.itemImage} source={images[image]} />
   </View>
 );
 
 const MenuItems = ({ navigation }) => {
-  const [showMenu, setShowMenu] = useState(true);
   const [data, setData] = useState([]);
   const [isLoading, setLoading] = useState(true);
+
+  const [searchBarText, setSearchBarText] = useState("");
+  const [query, setQuery] = useState("");
+  const [filterSelections, setFilterSelections] = useState(
+    sections.map(() => false)
+  );
+  /*
   const renderItem = ({ item }) => (
     <Item name={item.title} price={item.price} />
   );
   const renderSectionHeader = ({ section: { title } }) => (
     <Text style={menuStyles.sectionHeader}>{title}</Text>
   );
+  */
 
   const getMenu = async () => {
+    let counter = 1;
     try {
-      const response = await fetch(
-        "https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu-items-by-category.json"
-      );
+      const response = await fetch(API_URL);
       const json = await response.json();
-      setData(json.menu);
+      const menu = json.menu.reduce((sections, item) => {
+        const section = sections.find((sec) => sec.title === item.category);
+        const newItem = {
+          id: counter++,
+          name: item.name,
+          price: item.price.toString(),
+          description: item.description,
+          image: item.image,
+        };
+        if (section) {
+          section.data.push(newItem);
+        } else {
+          sections.push({
+            title: item.category,
+            data: [newItem],
+          });
+        }
+        return sections;
+      }, []);
+      setData(menu);
     } catch (error) {
       console.error(error);
     } finally {
@@ -91,14 +96,26 @@ const MenuItems = ({ navigation }) => {
   }, []);
 
   return (
-    <SafeAreaView style={menuStyles.container}>
+    <SafeAreaView style={styles.container}>
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        <FlatList
-          data={data}
-          keyExtractor={({ id }, index) => id}
-          renderItem={renderItem}
+        <SectionList
+          style={styles.sectionList}
+          sections={data}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Item
+              style={styles.item}
+              name={item.name}
+              price={item.price}
+              description={item.description}
+              image={item.image}
+            />
+          )}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={styles.sectionHeader}>{title}</Text>
+          )}
         />
       )}
     </SafeAreaView>
@@ -116,10 +133,10 @@ const MenuItems = ({ navigation }) => {
   );
 };
 
-const menuStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#495E57",
+    backgroundColor: "#f3ffef",
   },
   linkText: {
     fontSize: 24,
@@ -135,17 +152,13 @@ const menuStyles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 20,
   },
-  item: {
-    fontSize: 20,
-    color: "#F4CE14",
-  },
   sectionHeader: {
     fontSize: 26,
     flexWrap: "wrap",
-    backgroundColor: "grey",
+    backgroundColor: "#495e57",
     opacity: 0.8,
     textAlign: "center",
-    color: "black",
+    color: "#FFFFFF",
   },
   button: {
     fontSize: 22,
@@ -161,6 +174,63 @@ const menuStyles = StyleSheet.create({
     color: "#333333",
     textAlign: "center",
     fontSize: 32,
+  },
+  item: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopColor: "#cccccc",
+    paddingVertical: 10,
+    borderColor: "#495e57",
+    borderWidth: 4,
+    borderTopWidth: 0,
+  },
+  itemImage: {
+    width: 100,
+    height: 100,
+  },
+  itemBody: {
+    flex: 1,
+  },
+  itemHeader: {
+    fontSize: 24,
+    paddingVertical: 8,
+    color: "#495e57",
+    backgroundColor: "#fff",
+  },
+  name: {
+    fontSize: 20,
+    color: "#000000",
+    paddingBottom: 5,
+  },
+  description: {
+    color: "#495e57",
+    paddingRight: 5,
+  },
+  price: {
+    fontSize: 20,
+    color: "#495e57",
+    paddingTop: 5,
+  },
+  itemHeader: {
+    fontSize: 24,
+    backgroundColor: "gray",
+    color: "#333333",
+    textAlign: "center",
+  },
+  sectionList: {
+    flex: 1,
+  },
+  searchBar: {
+    backgroundColor: "#495E57",
+  },
+  searchField: {
+    backgroundColor: "#EDEFEE",
+    color: "#333333",
+  },
+  searchContainer: {
+    backgroundColor: "#495E57",
+    padding: 10,
   },
 });
 
