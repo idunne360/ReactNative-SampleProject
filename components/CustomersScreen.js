@@ -106,6 +106,7 @@ export default function CustomersScreen() {
                 uid: Date.now().toString(),
                 name: textInputValue,
               };
+              //add new customer to the list
               setCustomers([...customers, newValue]);
               db.transaction((tx) => {
                 tx.executeSql(
@@ -120,9 +121,9 @@ export default function CustomersScreen() {
             <Text style={styles.buttonTextStyle}> Save Customer </Text>
           </TouchableOpacity>
           <View>
-            <Text style={styles.customerName}>Customers: </Text>
+            <Text style={styles.titleText}>Customers: </Text>
             {customers.map((customer) => (
-              <View style={styles.customer}>
+              <View key={customer.uid} style={styles.customer}>
                 <Text style={styles.customerName}>{customer.name}</Text>
                 <View style={styles.icons}>
                   <IconButton
@@ -139,31 +140,32 @@ export default function CustomersScreen() {
               </View>
             ))}
           </View>
+          {dialog.isVisible && (
+            <Dialog visible={dialog.isVisible} onDismiss={hideDialog}>
+              <Dialog.Title>Edit Customer name</Dialog.Title>
+              <Dialog.Content>
+                <TextInput
+                  value={dialog.customer.name}
+                  style={styles.editInputStyle}
+                  onChangeText={(text) =>
+                    setDialog((prev) => ({
+                      ...prev,
+                      customer: {
+                        ...prev.customer,
+                        name: text,
+                      },
+                    }))
+                  }
+                />
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={() => hideDialog(dialog.customer)}>
+                  Done
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          )}
         </View>
-        <Portal>
-          <Dialog visible={dialog.isVisible} onDismiss={hideDialog}>
-            <Dialog.Title>Edit Customer name</Dialog.Title>
-            <Dialog.Content>
-              <TextInput
-                value={dialog.customer.name}
-                onChangeText={(text) =>
-                  setDialog((prev) => ({
-                    ...prev,
-                    customer: {
-                      ...prev.customer,
-                      name: text,
-                    },
-                  }))
-                }
-                underlineColorAndroid="transparent"
-                style={styles.textInputStyle}
-              />
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => hideDialog(dialog.customer)}>Done</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
       </SafeAreaView>
     </Provider>
   );
@@ -197,17 +199,27 @@ const styles = StyleSheet.create({
   },
   textInputStyle: {
     height: 40,
-    borderColor: "#EDEFEE",
+    borderColor: "#495E57",
     borderWidth: 1,
     paddingHorizontal: 10,
     marginBottom: 20,
-    color: "#EDEFEE",
+    color: "#333333",
+    backgroundColor: "#FFFFFF",
+  },
+  editInputStyle: {
+    height: 40,
+    borderColor: "#495E57",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    color: "#333333",
   },
   buttonStyle: {
     backgroundColor: "#F4CE14",
     padding: 10,
     alignItems: "center",
     borderRadius: 5,
+    marginBottom: 20,
   },
   buttonTextStyle: {
     color: "#333333",
